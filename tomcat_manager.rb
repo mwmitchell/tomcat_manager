@@ -34,6 +34,7 @@ end
 
 require 'rubygems'
 require 'uri'
+require 'net/http'
 require 'open-uri'
 require 'ostruct'
 
@@ -105,31 +106,31 @@ module TomcatManager
     
     def undeploy!(context)
       if deployed?(context)
-        get("#{server.manager_path}/undeploy?path=/#{context}")
+        get("#{server.manager_path}/undeploy?deployPath=/#{context}")
       end
     end
     
     def deploy!(context, config_file)
       if ! deployed?(context)
-        get("#{server.manager_path}/deploy?path=/#{context}&config=#{config_file}")
+        get("#{server.manager_path}/deploy?deployPath=/#{context}&deployConfig=#{config_file}")
       end
     end
     
     def stop(context)
       if deployed?(context) && running?(context)
-        get("#{server.manager_path}/stop?path=/#{context}")
+        get("#{server.manager_path}/stop?deployPath=/#{context}")
       end
     end
     
     def start(context)
       if deployed?(context) && ! running?(context)
-        get("#{server.manager_path}/start?path=/#{context}")
+        get("#{server.manager_path}/start?deployPath=/#{context}")
       end
     end
     
     def reload(context)
       if deployed?(context) && running?(context)
-        get("#{server.manager_path}/reload?path=/#{context}")
+        get("#{server.manager_path}/reload?deployPath=/#{context}")
       end
     end
     
@@ -156,6 +157,14 @@ module TomcatManager
       servers.each do |server|
         yield TomcatManager::Connection.new(server)
       end
+    end
+    
+    def exec(method, *args)
+      output={}
+      connect do |c|
+        output[c] = c.send(method.to_sym, *args)
+      end
+      output
     end
     
   end
